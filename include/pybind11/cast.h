@@ -125,6 +125,19 @@ PYBIND11_NOINLINE inline std::string error_string() {
     if (scope.value)
         errorString += (std::string) handle(scope.value).str();
 
+    handle traceback(scope.trace);
+    errorString += "\n";
+    while (traceback.attr("tb_lineno"))
+    {
+      std::string lineNo = handle(traceback.attr("tb_lineno")).str();
+      handle frame = handle(traceback.attr("tb_frame"));
+      handle code = handle(frame.attr("f_code"));
+      std::string fileName = handle(code.attr("co_filename")).str();
+      std::string funcName = handle(code.attr("co_name")).str();
+      errorString += "  File \"" + fileName + "\", line " + lineNo + ", in " + funcName + "\n";
+      traceback = handle(traceback.attr("tb_next"));
+    }
+
     return errorString;
 }
 
